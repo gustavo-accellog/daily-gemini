@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-message
+  namespace: desenvolvimento
+spec:
+  timeZone: "America/Sao_Paulo"
+  schedule: "0 6 * * 1-5"
+  successfulJobsHistoryLimit: 0
+  failedJobsHistoryLimit: 0
+  jobTemplate:
+    template:
+      spec:
+        containers:
+        - name: daily-message
+          image: your-docker-registry/daily-message:latest  # Substitua pelo nome da sua imagem
+          env:
+          - name: GEMINI_KEY
+            value: informeachave
+          - name: GOOGLE_CHAT_URL
+            value: informeaurl
+          command:
+          - /bin/sh
+          - -c
+          - python -u app.py
+        restartPolicy: OnFailure
