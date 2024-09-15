@@ -1,0 +1,42 @@
+name: Docker PUSH Image TO OCI
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - '*'
+
+jobs:
+  push-oci:
+    runs-on: ubuntu-22.04
+    name: Push OCIR Repository
+    env:
+      OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
+      OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
+      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
+      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
+      OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Get or create an OCIR Repository
+      uses: oracle-actions/get-ocir-repository@v1.2.1
+      id: get-ocir-repository
+      with:
+        name: daily-gemini
+        compartment: ${{ secrets.OCI_COMPARTMENT_OCID }}
+
+    - name: Log into OCIR
+      uses: oracle-actions/login-ocir@v1.2.1
+      id: login-ocir
+      with:
+        auth_token: ${{ secrets.OCI_AUTH_TOKEN }}
+
+    - name: Build the Docker image
+      id: build-image
+      run: docker build . --file Dockerfile --tag ${{ steps.get-ocir-repository.outputs.repo_path }}:${{ github.ref_name }}
+
+    - name: Push to Docker OCI
+      id: push-ocir
+      run: docker push ${{ steps.get-ocir-repository.outputs.repo_path }}:${{ github.ref_name }}
