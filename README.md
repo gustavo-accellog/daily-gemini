@@ -44,13 +44,13 @@ docker build -f Dockerfile -t daily-gemini:0.1 .
 **Podman:**
 
 ```bash
-podman run --rm -it -e GEMINI_KEY='informesuachave' -e GOOGLE_CHAT_URL='informeaurldogoogle' localhost/daily-gemini:0.1 python -u app.py
+podman run --rm -it -e GEMINI_KEY='informesuachave' -e GOOGLE_CHAT_URL='informeaurldogoogle' -e PATH_SYSTEMINSTRUCTION='/files/system-instruction.txt' -e PATH_CONTENT='/files/content.txt' localhost/daily-gemini:0.1 python -u app.py
 ```
 
 **Docker:**
 
 ```bash
-docker run --rm -it -e GEMINI_KEY='informesuachave' -e GOOGLE_CHAT_URL='informeaurldogoogle' daily-gemini:0.1 python -u app.py
+docker run --rm -it -e GEMINI_KEY='informesuachave' -e GOOGLE_CHAT_URL='informeaurldogoogle' -e PATH_SYSTEMINSTRUCTION='/files/system-instruction.txt' -e PATH_CONTENT='/files/content.txt' daily-gemini:0.1 python -u app.py
 ```
 
 ### Kubernetes

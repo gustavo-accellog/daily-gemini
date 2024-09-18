@@ -10,19 +10,23 @@ import requests
 GOOGLE_API_KEY=os.getenv("GEMINI_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
 model_name='gemini-1.5-flash'
-system_instruction = """Você é um lider técnico de uma empresa de desenvolvimento de softwares.
-Nome: Daily
-Sua Especialidade: Infraestrutura, Linux, Kubernetes, Docker, Oracle Cloud.
-Banco de Dados: Postgresql.
-Especialidade do Time de Desenvolvimento: PHP, Java, Laravel, VueJS.
-Reunião diária: 09:00
-Perguntas Utilizadas: O que você fez ontem? O que irá fazer hoje? Está com alguma dificuldade e precisa de ajuda?
-Todo dia você envia uma mensagem diária para motivar o time. Você utiliza linguagem informal. Gosta de brincar sobre desenvolvimento, porém mantém frases sempre positivas.
-Sempre lembre o time da importância da reunião diária e em formatar a melhor expliãcaço de suas atividades para esta reunião."""
 
+## ler system instruction de um arquivo
+path_systeminstruction = os.getenv("PATH_SYSTEMINSTRUCTION")    # "./caminho-arquivo/system-instruction.txt"
+with open(path_systeminstruction, 'r') as system_file:
+    system_instruction = system_file.read()
+    system_file.close()
 
+print(system_instruction)
+
+## ler content
+path_content = os.getenv("PATH_CONTENT")      # "./caminho-arquivo/content.txt"
 hoje = datetime.now()
-content = f"Hoje é dia %s. Escreva uma mensagem para o time de desenvolvimento. Fale seu nome. Utilize a formatação de texto com html." % (hoje.strftime('%d/%m/%Y %H:%M'))
+with open(path_content, 'r') as content_file:
+    content = f"{content_file.read()}" % (hoje.strftime('%d/%m/%Y %H:%M'))
+    content_file.close()
+
+print(content)
 
 model = genai.GenerativeModel(model_name=model_name, system_instruction=system_instruction)
 response = model.generate_content(content)

@@ -1,3 +1,29 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: config-system-instruction
+  namespace: desenvolvimento
+data:
+  system-instruction.txt: |
+    Você é um lider técnico de uma empresa de desenvolvimento de softwares.
+    Nome: Daily
+    Sua Especialidade: Infraestrutura, Linux, Kubernetes, Docker, Oracle Cloud.
+    Banco de Dados: Postgresql.
+    Especialidade do Time de Desenvolvimento: PHP, Java, Laravel, VueJS.
+    Reunião diária: 09:00
+    Perguntas Utilizadas: O que você fez ontem? O que irá fazer hoje? Está com alguma dificuldade e precisa de ajuda?
+    Todo dia você envia uma mensagem diária para motivar o time. Você utiliza linguagem informal. Gosta de brincar sobre desenvolvimento, porém mantém frases sempre positivas.
+    Sempre lembre o time da importância da reunião diária e em formatar a melhor expliãcaço de suas atividades para esta reunião.
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: config-content
+  namespace: desenvolvimento
+data:
+  content.txt: |
+    Hoje é dia %s. Escreva uma mensagem para o time de desenvolvimento. Fale seu nome. Utilize a formatação de texto com html.
+---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -24,6 +50,18 @@ spec:
             - /bin/sh
             - -c
             - python -u app.py
+            volumeMounts:
+            - name: file-system-instruction
+              mountPath: /files/system-instruction.txt
+              subPath: system-instruction.txt
+            - name: file-content
+              mountPath: /files/content.txt
+              subPath: content.txt
           restartPolicy: OnFailure
-          # imagePullSecrets:
-          #   - name: desenvolvimento-ocir-secret
+          volumes:
+          - name: file-system-instruction
+            configMap:
+              name: config-system-instruction
+          - name: file-content
+            configMap:
+              name: config-content
