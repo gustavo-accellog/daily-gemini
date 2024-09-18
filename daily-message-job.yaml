@@ -69,3 +69,5 @@ spec:
           - name: file-content
             configMap:
               name: config-content
+          # imagePullSecrets:
+          # - name: desenvolvimento-ocir-secret
