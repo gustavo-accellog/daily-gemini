@@ -46,6 +46,10 @@ spec:
               value: informeachave
             - name: GOOGLE_CHAT_URL
               value: informeaurl
+            - name: PATH_SYSTEMINSTRUCTION
+              value: "/files/system-instruction.txt"
+            - name: PATH_CONTENT
+              value: "/files/content.txt"
             command:
             - /bin/sh
             - -c
