@@ -4,6 +4,7 @@
 import json
 import os
 from datetime import datetime
+from markdown import markdown
 import google.generativeai as genai
 import requests
 
@@ -12,24 +13,27 @@ genai.configure(api_key=GOOGLE_API_KEY)
 model_name='gemini-1.5-flash'
 
 ## ler system instruction de um arquivo
-path_systeminstruction = os.getenv("PATH_SYSTEMINSTRUCTION")    # "./caminho-arquivo/system-instruction.txt"
+path_systeminstruction = os.getenv("PATH_SYSTEMINSTRUCTION", "./caminho-arquivo/system-instruction.txt")
 with open(path_systeminstruction, 'r') as system_file:
     system_instruction = system_file.read()
     system_file.close()
 
-print(system_instruction)
+# print(system_instruction)
 
 ## ler content
-path_content = os.getenv("PATH_CONTENT")      # "./caminho-arquivo/content.txt"
+path_content = os.getenv("PATH_CONTENT", "./caminho-arquivo/content.txt")
 hoje = datetime.now()
 with open(path_content, 'r') as content_file:
     content = f"{content_file.read()}" % (hoje.strftime('%d/%m/%Y %H:%M'))
     content_file.close()
 
-print(content)
+# print(content)
 
 model = genai.GenerativeModel(model_name=model_name, system_instruction=system_instruction)
 response = model.generate_content(content)
+message = markdown(response.text)
+
+# print(message)
 
 api_url_base = os.getenv("GOOGLE_CHAT_URL")
 headers = {'Content-Type': 'application/json; charset=UTF-8'}
@@ -46,7 +50,7 @@ dados = {
                     "widgets": [
                         {
                             "textParagraph": {
-                                "text": response.text
+                                "text": message
                             }
                         }
                     ]
@@ -56,9 +60,7 @@ dados = {
     ]
 }
 
-datetimeFORMAT = '%Y-%m-%d %H:%M.%s'
-
 try:
     resp = requests.post(api_url_base, headers=headers, data=json.dumps(dados))
 except Exception as ex:
-    print("%s ERROR sending message to Google Chat - Response %s"%(hoje.strftime(datetimeFORMAT), ex))
+    print("%s ERROR sending message to Google Chat - Response %s"%(hoje.strftime('%Y-%m-%d %H:%M.%s'), ex))
