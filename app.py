@@ -4,26 +4,28 @@
 import json
 import os
 from datetime import datetime
-from markdown import markdown
-import google.generativeai as genai
 import requests
+
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.prompts import PromptTemplate, ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
 
 load_dotenv()
 
 GOOGLE_API_KEY=os.getenv("GEMINI_KEY")
-MODEL_NAME='gemini-2.0-flash-exp'
+API_URL_BASE=os.getenv("GOOGLE_CHAT_URL")
+# MODEL_NAME='gemini-2.0-flash'
+MODEL_NAME='gemini-2.0-pro-exp-02-05'
 CONFIGURACAO_MODELO = {
     'temperature': 2.0,
-    'top_p': 0.,
+    'top_p': 0.95,
     'top_k': 64,
-    'max_output_tokens': 8192,
+    'output_length': 8192,
     'response_mime_type': 'text/plain'      # 'application/json'
 }
 
-API_URL_BASE = os.getenv("GOOGLE_CHAT_URL")
-
-def mensagem_daily(hoje):
+def mensagem_daily():
     ## ler system instruction de um arquivo
     path_systeminstruction = os.getenv("PATH_SYSTEMINSTRUCTION", "./caminho-arquivo/system-instruction.txt")
     with open(path_systeminstruction, 'r') as system_file:
@@ -35,20 +37,63 @@ def mensagem_daily(hoje):
     ## ler content
     path_content = os.getenv("PATH_CONTENT", "./caminho-arquivo/content.txt")
     with open(path_content, 'r') as content_file:
-        content = f"{content_file.read()}" % (hoje.strftime('%d/%m/%Y %H:%M'))
+        content = content_file.read()
         content_file.close()
 
     # print(content)
 
-    genai.configure(api_key=GOOGLE_API_KEY)
-    llm = genai.GenerativeModel(
-        model_name=MODEL_NAME,
-        system_instruction=system_instruction,
-        generation_config=CONFIGURACAO_MODELO,
+    llm = ChatGoogleGenerativeAI(
+        api_key=GOOGLE_API_KEY,
+        model=MODEL_NAME,
+        model_kwargs=CONFIGURACAO_MODELO
     )
-    response = llm.generate_content(content)
 
-    return response.text
+
+    template_mensagem = ChatPromptTemplate.from_messages(
+        [
+            (
+                'system',
+                system_instruction
+            ),
+            (
+                'user',
+                [
+                    {
+                        'type': 'text',
+                        'text': content,
+                    }
+                ]
+            )
+        ]
+    )
+
+    cadeia_mensagem = template_mensagem | llm | StrOutputParser()
+
+    corpo_mensagem = cadeia_mensagem.invoke({})
+
+
+    template_resposta = PromptTemplate(
+        template="""
+        Você é um especialista em gerar mensagens motivacionais em HTML para equipes de desenvolvimento.
+
+        Crie uma mensagem inspiradora para a equipe, incluindo os seguintes elementos:
+
+        * Título: {titulo}
+        * Corpo: {corpo}
+        * Autor: {autor}
+
+        A mensagem deve ser formatada em HTML, com as tags `<h1>`, `<p>` e `<strong>`.
+        Gere apenas o HTML. Não gere explicações sobre o HTML.
+         Gere **apenas** o código HTML, sem incluir as tags `<DOCTYPE html>`, `<html>`, `<head>` e `<body>`
+        """,
+        input_variables=['titulo', 'corpo', 'autor']
+    )
+
+    cadeia_html = template_resposta | llm | StrOutputParser()
+
+    resposta = cadeia_html.invoke({'titulo': 'Daily Carga Pontual', 'corpo': corpo_mensagem, 'autor': 'Daily'})
+
+    return resposta
 
 def send_googlechat(message, hoje):
     headers = {'Content-Type': 'application/json; charset=UTF-8'}
@@ -83,8 +128,9 @@ def send_googlechat(message, hoje):
 
 def main():
     hoje = datetime.now()
-    message = markdown(mensagem_daily(hoje))
-    
+    message = mensagem_daily()
+    message = message.replace('```html', '').replace('```', '')
+
     send_googlechat(message, hoje)
 
 if __name__ == '__main__':
