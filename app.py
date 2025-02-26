@@ -80,19 +80,18 @@ def mensagem_daily():
 
         * Título: {titulo}
         * Corpo: {corpo}
-        * Autor: {autor}
 
         A mensagem deve ser formatada em HTML, com as tags `<h1>`, `<p>` e `<strong>`.
         Gere apenas o HTML. Não gere explicações sobre o HTML.
-         Gere **apenas** o código HTML, sem incluir as tags `<DOCTYPE html>`, `<html>`, `<head>` e `<body>`
+         Gere **apenas** o código HTML, sem incluir as tags `<DOCTYPE html>`, `<html>`, `<head>`, `<body>`, `<ul>` e `<li>`.
         """,
-        input_variables=['titulo', 'corpo', 'autor']
+        input_variables=['titulo', 'corpo']
     )
 
     cadeia_html = template_resposta | llm | StrOutputParser()
 
     resposta = cadeia_html.invoke({'titulo': 'Daily Carga Pontual', 'corpo': corpo_mensagem, 'autor': 'Daily'})
-
+    # print(resposta)
     return resposta
 
 def send_googlechat(message, hoje):
@@ -130,7 +129,6 @@ def main():
     hoje = datetime.now()
     message = mensagem_daily()
     message = message.replace('```html', '').replace('```', '')
-
     send_googlechat(message, hoje)
 
 if __name__ == '__main__':
