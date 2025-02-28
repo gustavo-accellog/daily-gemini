@@ -90,7 +90,7 @@ def mensagem_daily():
 
     cadeia_html = template_resposta | llm | StrOutputParser()
 
-    resposta = cadeia_html.invoke({'titulo': 'Daily Carga Pontual', 'corpo': corpo_mensagem, 'autor': 'Daily'})
+    resposta = cadeia_html.invoke({'titulo': 'Daily Carga Pontual', 'corpo': corpo_mensagem})
     # print(resposta)
     return resposta
 
