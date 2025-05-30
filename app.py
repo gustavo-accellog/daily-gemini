@@ -15,8 +15,8 @@ load_dotenv()
 
 GOOGLE_API_KEY=os.getenv("GEMINI_KEY")
 API_URL_BASE=os.getenv("GOOGLE_CHAT_URL")
-# MODEL_NAME='gemini-2.0-flash'
-MODEL_NAME='gemini-2.0-pro-exp-02-05'
+MODEL_NAME='gemini-2.0-flash'
+# MODEL_NAME='gemini-2.0-pro-exp-02-05'
 CONFIGURACAO_MODELO = {
     'temperature': 2.0,
     'top_p': 0.95,
