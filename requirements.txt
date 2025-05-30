@@ -5,3 +5,4 @@ langchain-core==0.3.35
 langchain-google-genai==2.0.9
 pillow==11.1.0
 python-dotenv==1.0.1
+pydantic==2.10.6
