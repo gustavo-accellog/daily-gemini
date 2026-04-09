@@ -1,6 +1,8 @@
-FROM python:3.13-alpine
+FROM python:3.14-alpine
 
 WORKDIR /app
+
+RUN apk add --no-cache gcc musl-dev libffi-dev zlib-dev jpeg-dev
 
 RUN pip install --upgrade pip
 
