@@ -7,7 +7,7 @@ from datetime import datetime
 import requests
 
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate, ChatPromptTemplate
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
 
@@ -17,13 +17,10 @@ GOOGLE_API_KEY=os.getenv("GEMINI_KEY")
 API_URL_BASE=os.getenv("GOOGLE_CHAT_URL")
 MODEL_NAME=os.getenv("MODEL_NAME", "gemini-2.5-flash")
 # MODEL_NAME='gemini-2.0-pro-exp-02-05'
-CONFIGURACAO_MODELO = {
-    'temperature': 2.0,
-    'top_p': 0.95,
-    'top_k': 64,
-    'output_length': 8192,
-    'response_mime_type': 'text/plain'      # 'application/json'
-}
+TEMPERATURA = 1.0
+TOP_P = 0.95
+TOP_K = 64
+MAX_OUTPUT_TOKENS = 8192
 
 def mensagem_daily():
     ## ler system instruction de um arquivo
@@ -45,7 +42,10 @@ def mensagem_daily():
     llm = ChatGoogleGenerativeAI(
         api_key=GOOGLE_API_KEY,
         model=MODEL_NAME,
-        model_kwargs=CONFIGURACAO_MODELO
+        temperature=TEMPERATURA,
+        top_p=TOP_P,
+        top_k=TOP_K,
+        max_output_tokens=MAX_OUTPUT_TOKENS,
     )
 
 
