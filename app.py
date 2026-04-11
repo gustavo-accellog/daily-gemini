@@ -4,6 +4,7 @@
 import json
 import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import requests
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -12,6 +13,11 @@ from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
 
 load_dotenv()
+
+DIAS_SEMANA = {
+    0: "Segunda-feira", 1: "Terça-feira", 2: "Quarta-feira",
+    3: "Quinta-feira",  4: "Sexta-feira", 5: "Sábado", 6: "Domingo",
+}
 
 GOOGLE_API_KEY=os.getenv("GEMINI_KEY")
 API_URL_BASE=os.getenv("GOOGLE_CHAT_URL")
@@ -22,7 +28,29 @@ TOP_P = 0.95
 TOP_K = 64
 MAX_OUTPUT_TOKENS = 8192
 
-def mensagem_daily():
+def formatar_contexto_data(hoje: datetime) -> str:
+    dia = DIAS_SEMANA[hoje.weekday()]
+    return f"{dia}, {hoje.strftime('%d/%m/%Y')} às {hoje.strftime('%H:%M')} (horário de Brasília)"
+
+
+def carregar_data_especial(hoje: datetime) -> dict | None:
+    path = os.getenv("PATH_SPECIAL_DATES", "./files/special-dates.json")
+    try:
+        with open(path, 'r') as f:
+            dados = json.load(f)
+    except FileNotFoundError:
+        return None
+    for entrada in dados.get("special_dates", []):
+        if entrada["type"] == "annual":
+            if entrada["month"] == hoje.month and entrada["day"] == hoje.day:
+                return entrada
+        elif entrada["type"] == "once":
+            if entrada.get("year") == hoje.year and entrada["month"] == hoje.month and entrada["day"] == hoje.day:
+                return entrada
+    return None
+
+
+def mensagem_daily(hoje: datetime):
     ## ler system instruction de um arquivo
     path_systeminstruction = os.getenv("PATH_SYSTEMINSTRUCTION", "./caminho-arquivo/system-instruction.txt")
     with open(path_systeminstruction, 'r') as system_file:
@@ -37,7 +65,15 @@ def mensagem_daily():
         content = content_file.read()
         content_file.close()
 
-    # print(content)
+    data_especial = carregar_data_especial(hoje)
+    hint_especial = ""
+    if data_especial:
+        nome = data_especial["name"]
+        hint = data_especial.get("message_hint", "")
+        hint_especial = f" Hoje também é {nome}. {hint}"
+
+    content = content.replace("{{DATE_CONTEXT}}", formatar_contexto_data(hoje))
+    content = content.replace("{{SPECIAL_DATE}}", hint_especial)
 
     llm = ChatGoogleGenerativeAI(
         api_key=GOOGLE_API_KEY,
@@ -126,8 +162,8 @@ def send_googlechat(message, hoje):
         print("%s ERROR sending message to Google Chat - Response %s"%(hoje.strftime('%Y-%m-%d %H:%M.%s'), ex))
 
 def main():
-    hoje = datetime.now()
-    message = mensagem_daily()
+    hoje = datetime.now(tz=ZoneInfo("America/Sao_Paulo"))
+    message = mensagem_daily(hoje)
     message = message.replace('```html', '').replace('```', '')
     send_googlechat(message, hoje)
 

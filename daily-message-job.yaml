@@ -22,7 +22,28 @@ metadata:
   namespace: desenvolvimento
 data:
   content.txt: |
-    Hoje é dia %s. Escreva uma mensagem para o time de desenvolvimento. Fale seu nome. Utilize a formatação de texto com html.
+    Hoje é {{DATE_CONTEXT}}.{{SPECIAL_DATE}} Escreva uma mensagem motivacional para o time de desenvolvimento. Fale seu nome. Utilize a formatação de texto com html.
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: config-special-dates
+  namespace: desenvolvimento
+data:
+  special-dates.json: |
+    {
+      "special_dates": [
+        { "type": "annual", "month": 1,  "day": 1,  "name": "Ano Novo",                 "message_hint": "Feliz Ano Novo! Celebre as conquistas do ano passado e inspire o time para os desafios do novo ano." },
+        { "type": "annual", "month": 4,  "day": 21, "name": "Tiradentes",               "message_hint": "Lembre o time sobre a importância de lutar pelos ideais e pela qualidade do que entregamos." },
+        { "type": "annual", "month": 5,  "day": 1,  "name": "Dia do Trabalho",          "message_hint": "Parabenize o time pelo trabalho dedicado e celebre o valor de cada contribuição." },
+        { "type": "annual", "month": 9,  "day": 7,  "name": "Independência do Brasil",  "message_hint": "Inspire o time com o espírito de independência e autonomia no trabalho." },
+        { "type": "annual", "month": 10, "day": 12, "name": "Nossa Senhora Aparecida",  "message_hint": "Deseje um feliz feriado ao time." },
+        { "type": "annual", "month": 11, "day": 2,  "name": "Finados",                  "message_hint": "Honre a memória de quem veio antes e deixou legado." },
+        { "type": "annual", "month": 11, "day": 15, "name": "Proclamação da República", "message_hint": "Fale sobre trabalho em conjunto e construção coletiva." },
+        { "type": "annual", "month": 11, "day": 20, "name": "Consciência Negra",        "message_hint": "Celebre a diversidade e a riqueza cultural do time." },
+        { "type": "annual", "month": 12, "day": 25, "name": "Natal",                    "message_hint": "Feliz Natal! Deseje paz, alegria e descanso merecido ao time." }
+      ]
+    }
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -50,6 +71,8 @@ spec:
               value: "/files/system-instruction.txt"
             - name: PATH_CONTENT
               value: "/files/content.txt"
+            - name: PATH_SPECIAL_DATES
+              value: "/files/special-dates.json"
             command:
             - /bin/sh
             - -c
@@ -61,6 +84,9 @@ spec:
             - name: file-content
               mountPath: /files/content.txt
               subPath: content.txt
+            - name: file-special-dates
+              mountPath: /files/special-dates.json
+              subPath: special-dates.json
           restartPolicy: OnFailure
           volumes:
           - name: file-system-instruction
@@ -69,5 +95,8 @@ spec:
           - name: file-content
             configMap:
               name: config-content
+          - name: file-special-dates
+            configMap:
+              name: config-special-dates
           # imagePullSecrets:
           # - name: desenvolvimento-ocir-secret
